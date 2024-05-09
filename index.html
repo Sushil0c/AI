@@ -1,18 +1,164 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>News Reader</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI</title>
+
+    <style>
+        /* Styles for the chat messages */
+        .msg,
+        .msg1 {
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 5px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        .msg.show,
+        .msg1.show {
+            max-height: none;
+        }
+
+        .msg {
+            background-color: #000000;
+        }
+
+        .msg1 {
+            background-color: #000000;
+        }
+
+        /* Styles for the copy button */
+        .copy-btn {
+            margin-left: 10px;
+        }
+
+        /* Styles for the chatbox */
+        #chatbox {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100vh;
+            background-color: black;
+            color: white;
+            padding: 10px;
+        }
+
+        #msg_text {
+            width: 80%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #sendButton,
+        #refreshButton {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #c7e1ff;
+        }
+
+        /* Styles for the messages container */
+        #tb {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+    </style>
 </head>
+
 <body>
-  <header>
-    <h1>News Reader</h1>
-  </header>
-  <div class="container">
-    <div id="newsList"></div>
-  </div>
-  <script src="script.js"></script>
+    <div id="chatbox">
+        <div id="tb" class="messages"></div>
+        <div>
+            <input type="text" id="msg_text" placeholder="Type your message here...">
+            <button id="sendButton">Send</button>
+            <button id="refreshButton">Clear</button>
+        </div>
+    </div>
+
+    <script>
+        function send() {
+            var input_msg = document.getElementById('msg_text').value;
+            var tb = document.getElementById('tb');
+            if (input_msg != '') {
+                var new_msg = document.createElement('div');
+                new_msg.setAttribute('class', 'msg');
+                var newId = generateUniqueId();
+                new_msg.setAttribute('id', newId);
+                tb.appendChild(new_msg);
+                var msg_box = document.getElementById(newId);
+                var msg_text = document.createElement('span');
+                msg_text.innerText = input_msg;
+                msg_box.appendChild(msg_text);
+                const user_msg = input_msg;
+                document.getElementById('msg_text').value = '';
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        const responseData = JSON.parse(xhttp.responseText);
+                        const answerValue = responseData.answer;
+                        var ai_msg = document.createElement('div');
+                        ai_msg.setAttribute('class', 'msg1');
+                        var newId = generateUniqueId();
+                        ai_msg.setAttribute('id', newId);
+                        tb.appendChild(ai_msg);
+                        var ai_msg_box = document.getElementById(newId);
+                        var ai_msg_text = document.createElement('span');
+                        ai_msg_text.innerText = answerValue;
+                        ai_msg_box.appendChild(ai_msg_text);
+                        var isUserMsgTooLong = msg_box.scrollHeight > msg_box.offsetHeight;
+                        var isAiMsgTooLong = ai_msg_box.scrollHeight > ai_msg_box.offsetHeight;
+                        if (isUserMsgTooLong) {
+                            msg_box.classList.add('show');
+                        }
+                        if (isAiMsgTooLong) {
+                            ai_msg_box.classList.add('show');
+                        }
+                        var ai_reply_audio = new SpeechSynthesisUtterance(answerValue);
+                        window.speechSynthesis.speak(ai_reply_audio);
+                        var typing_sound = new SpeechSynthesisUtterance('Typing...');
+                        window.speechSynthesis.speak(typing_sound);
+                        var copyButton = document.createElement('button');
+                        copyButton.innerText = 'Copy';
+                        copyButton.classList.add('copy-btn');
+                        ai_msg_text.focus();
+                        copyButton.addEventListener('click', function () {
+                            navigator.clipboard.writeText(answerValue);
+                        });
+                        ai_msg_box.appendChild(copyButton);
+                    }
+                    tb.scrollTop = tb.scrollHeight;
+                };
+                xhttp.open("POST", "https://chatgpt.apinepdev.workers.dev/?question=" + user_msg, true);
+                xhttp.send();
+            }
+        }
+
+        // Add event listener to the Send button
+        document.getElementById('sendButton').addEventListener('click', send);
+
+        // Add event listener to the Clear button
+        document.getElementById('refreshButton').addEventListener('click', function () {
+            var messages = document.querySelectorAll('.msg, .msg1');
+            for (var i = 0; i < messages.length; i++) {
+                messages[i].parentNode.removeChild(messages[i]);
+            }
+            var tb = document.getElementById('tb');
+            tb.scrollTop = 0;
+        });
+
+        function generateUniqueId() {
+            return 'id_' + Math.random().toString(36).substr(2, 9);
+        }
+    </script>
 </body>
+
 </html>
