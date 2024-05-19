@@ -1,12 +1,10 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI</title>
-
     <style>
         /* Styles for the chat messages */
         .msg,
@@ -39,10 +37,8 @@
 
         /* Styles for the chatbox */
         #chatbox {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            height: 100vh;
+            position: relative;
+            height: auto;
             background-color: black;
             color: white;
             padding: 10px;
@@ -54,6 +50,16 @@
             border: none;
             border-radius: 5px;
             margin-right: 10px;
+        }
+
+        #button-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
         }
 
         #sendButton,
@@ -68,17 +74,17 @@
         /* Styles for the messages container */
         #tb {
             overflow-y: auto;
-            flex: 1;
+            height: auto; /* Adjusts height based on content */
         }
-
     </style>
 </head>
-
 <body>
     <div id="chatbox">
         <div id="tb" class="messages"></div>
         <div>
             <input type="text" id="msg_text" placeholder="Type your message here...">
+        </div>
+        <div id="button-container">
             <button id="sendButton">Send</button>
             <button id="refreshButton">Clear</button>
         </div>
@@ -160,5 +166,4 @@
         }
     </script>
 </body>
-
 </html>
