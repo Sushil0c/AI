@@ -1,169 +1,231 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI</title>
+    <title>AI Chat</title>
     <style>
-        /* Styles for the chat messages */
-        .msg,
-        .msg1 {
-            padding: 5px 10px;
-            margin: 5px;
-            border-radius: 5px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-out;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
-        .msg.show,
-        .msg1.show {
-            max-height: none;
-        }
-
-        .msg {
-            background-color: #000000;
-        }
-
-        .msg1 {
-            background-color: #000000;
-        }
-
-        /* Styles for the copy button */
-        .copy-btn {
-            margin-left: 10px;
-        }
-
-        /* Styles for the chatbox */
         #chatbox {
-            position: relative;
-            height: auto;
-            background-color: black;
-            color: white;
-            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            height: 80vh;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        #msg_text {
-            width: 80%;
+        .messages {
+            flex: 1;
             padding: 10px;
-            border: none;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            touch-action: none; /* Disable default touch actions */
+        }
+
+        .input-container {
+            display: flex;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 5px;
             margin-right: 10px;
         }
 
-        #button-container {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+        .input-container button {
+            padding: 10px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .input-container button:hover {
+            background: #0056b3;
+        }
+
+        .msg, .msg1 {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
         }
 
-        #sendButton,
-        #refreshButton {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        .msg {
+            background-color: #e1ffc7;
+        }
+
+        .msg1 {
             background-color: #c7e1ff;
         }
 
-        /* Styles for the messages container */
-        #tb {
-            overflow-y: auto;
-            height: auto; /* Adjusts height based on content */
+        .copy-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .toast.show {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div id="chatbox">
+<main>        
+<div class="container">            
+<h2> chatd </h2>            
+
+    <div id="chatbox" role="region" aria-live="polite" aria-label="AI chat messages">
         <div id="tb" class="messages"></div>
-        <div>
-            <input type="text" id="msg_text" placeholder="Type your message here...">
-        </div>
-        <div id="button-container">
-            <button id="sendButton">Send</button>
-            <button id="refreshButton">Clear</button>
+        <div class="input-container">
+            <input type="text" id="msg_text" placeholder="Type your message here..." aria-label="Message input">
+            <button id="sendButton" aria-label="Send message">Send</button>
+            <button id="refreshButton" aria-label="Clear messages">Clear</button>
         </div>
     </div>
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+        </div>
+    </main>
+    <script src="scripts.js"></script>
 
     <script>
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         function send() {
-            var input_msg = document.getElementById('msg_text').value;
-            var tb = document.getElementById('tb');
-            if (input_msg != '') {
-                var new_msg = document.createElement('div');
+            const input_msg = document.getElementById('msg_text').value;
+            const tb = document.getElementById('tb');
+            if (input_msg !== '') {
+                const new_msg = document.createElement('div');
                 new_msg.setAttribute('class', 'msg');
-                var newId = generateUniqueId();
+                new_msg.setAttribute('role', 'alert');
+                const newId = generateUniqueId();
                 new_msg.setAttribute('id', newId);
                 tb.appendChild(new_msg);
-                var msg_box = document.getElementById(newId);
-                var msg_text = document.createElement('span');
+                const msg_box = document.getElementById(newId);
+                const msg_text = document.createElement('span');
                 msg_text.innerText = input_msg;
                 msg_box.appendChild(msg_text);
-                const user_msg = input_msg;
+
+                showToast('Message sent');
                 document.getElementById('msg_text').value = '';
-                var xhttp = new XMLHttpRequest();
+
+                const xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         const responseData = JSON.parse(xhttp.responseText);
                         const answerValue = responseData.answer;
-                        var ai_msg = document.createElement('div');
+
+                        const ai_msg = document.createElement('div');
                         ai_msg.setAttribute('class', 'msg1');
-                        var newId = generateUniqueId();
+                        ai_msg.setAttribute('role', 'alert');
+                        const newId = generateUniqueId();
                         ai_msg.setAttribute('id', newId);
                         tb.appendChild(ai_msg);
-                        var ai_msg_box = document.getElementById(newId);
-                        var ai_msg_text = document.createElement('span');
+                        const ai_msg_box = document.getElementById(newId);
+                        const ai_msg_text = document.createElement('span');
                         ai_msg_text.innerText = answerValue;
                         ai_msg_box.appendChild(ai_msg_text);
-                        var isUserMsgTooLong = msg_box.scrollHeight > msg_box.offsetHeight;
-                        var isAiMsgTooLong = ai_msg_box.scrollHeight > ai_msg_box.offsetHeight;
-                        if (isUserMsgTooLong) {
-                            msg_box.classList.add('show');
-                        }
-                        if (isAiMsgTooLong) {
-                            ai_msg_box.classList.add('show');
-                        }
-                        var ai_reply_audio = new SpeechSynthesisUtterance(answerValue);
+
+                        showToast('Reply received');
+
+                        const ai_reply_audio = new SpeechSynthesisUtterance(answerValue);
                         window.speechSynthesis.speak(ai_reply_audio);
-                        var typing_sound = new SpeechSynthesisUtterance('Typing...');
-                        window.speechSynthesis.speak(typing_sound);
-                        var copyButton = document.createElement('button');
+
+                        const copyButton = document.createElement('button');
                         copyButton.innerText = 'Copy';
                         copyButton.classList.add('copy-btn');
-                        ai_msg_text.focus();
-                        copyButton.addEventListener('click', function () {
+                        copyButton.setAttribute('aria-label', 'Copy message');
+                        copyButton.addEventListener('click', function() {
                             navigator.clipboard.writeText(answerValue);
+                            showToast('Message copied to clipboard');
                         });
                         ai_msg_box.appendChild(copyButton);
                     }
                     tb.scrollTop = tb.scrollHeight;
                 };
-                xhttp.open("POST", "https://chatgpt.apinepdev.workers.dev/?question=" + user_msg, true);
+                xhttp.open("POST", "https://chatgpt.apinepdev.workers.dev/?question=" + encodeURIComponent(input_msg), true);
                 xhttp.send();
             }
         }
 
-        // Add event listener to the Send button
         document.getElementById('sendButton').addEventListener('click', send);
 
-        // Add event listener to the Clear button
-        document.getElementById('refreshButton').addEventListener('click', function () {
-            var messages = document.querySelectorAll('.msg, .msg1');
-            for (var i = 0; i < messages.length; i++) {
-                messages[i].parentNode.removeChild(messages[i]);
-            }
-            var tb = document.getElementById('tb');
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            const messages = document.querySelectorAll('.msg, .msg1');
+            messages.forEach(msg => msg.remove());
+            const tb = document.getElementById('tb');
             tb.scrollTop = 0;
         });
 
         function generateUniqueId() {
             return 'id_' + Math.random().toString(36).substr(2, 9);
         }
+
+        // Touch event handling for sliding messages
+        const messagesDiv = document.querySelector('.messages');
+        let startY = 0;
+        let startScrollTop = 0;
+
+        messagesDiv.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].pageY;
+            startScrollTop = messagesDiv.scrollTop;
+        });
+
+        messagesDiv.addEventListener('touchmove', function(e) {
+            const touch = e.touches[0];
+            const distanceY = touch.pageY - startY;
+            messagesDiv.scrollTop = startScrollTop - distanceY;
+        });
     </script>
 </body>
 </html>
